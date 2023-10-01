@@ -34,8 +34,11 @@ func GetSharesRecurse(primaryHoldingName string, holdings map[string]*model.Hold
 // findSharesRecurse finds all shares with a basic recursion function but adds a memento for performance of repeat lookups
 //
 // NOTE
-// This is worth exploring because the finding of shares is many similar and potentially repeated sub-problems,
+// This is worth exploring because the finding of shares is a set of potentially repeated sub-problems,
 // like a dynamic programming problem
+//
+// NOTE
+// It may even be practical to parallelise the sub problems, but let's not get too carried away at this stage :)
 func findSharesMemento(holding *model.Holding, shares *[]string, memento FinderMemento) {
 	for _, h := range holding.Holdings {
 		if h.IsFund {
