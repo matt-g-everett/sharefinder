@@ -25,8 +25,11 @@ func main() {
 	// Lets demonstrate basic recursion here
 	//
 	// NOTE
-	// We'd probably want to convince ourselves that for a very deeply nested DAG, we wouldn't overflow the stack.
-	// golang doesn't have comprehensive tail call optimisation, but some cases it's ok with
+	// We'd probably want to convince ourselves that the maximum DAG depth wouldn't overflow the stack.
+	// golang doesn't have comprehensive tail call optimisation and this approach can certainly result in
+	// stack overflows in extreme cases. This is easy to show by introducing a loop in example.json
+	//
+	// We may decide to attempt some form of trampolining, e.g. https://github.com/kandu/go_tailcall
 	shares, err := finder.GetSharesRecurse("Ethical Global Fund", holdings)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
