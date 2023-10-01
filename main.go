@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	"sharefinder/api"
@@ -11,22 +10,10 @@ import (
 	"sharefinder/model"
 )
 
-// loadFundData loads api.FundData from a file
-func loadFundData(path string) (api.FundData, error) {
-	jsonFile, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	defer jsonFile.Close()
-	bytes, _ := io.ReadAll(jsonFile)
-	return api.NewFundData(bytes), nil
-}
-
 func main() {
 	// Keep it simple and load directly from a fixed file in a relative location
 	// We could load from a path in a command line option, or from stdin or from an API
-	fundData, err := loadFundData("testdata/example.json")
+	fundData, err := api.LoadFundData("testdata/example.json")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return

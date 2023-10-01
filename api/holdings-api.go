@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"io"
+	"os"
 )
 
 // HoldingRecord represents a share or fund and the ratio of the parent fund that it makes up
@@ -25,4 +27,16 @@ func NewFundData(bytes []byte) FundData {
 	json.Unmarshal(bytes, &fundData)
 
 	return fundData
+}
+
+// loadFundData loads api.FundData from a file
+func LoadFundData(path string) (FundData, error) {
+	jsonFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	defer jsonFile.Close()
+	bytes, _ := io.ReadAll(jsonFile)
+	return NewFundData(bytes), nil
 }
