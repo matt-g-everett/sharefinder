@@ -22,15 +22,19 @@ func main() {
 	// Structure the data into a DAG (directed acyclic graph) so we can traverse the relationships
 	holdings := model.NewHoldingsDag(fundData)
 
-	// Lets demonstrate basic recursion to start with
+	// Lets demonstrate basic recursion here
 	//
 	// NOTE
-	// Simple recursion would be ok for small datasets, however, if there was very deeply nested DAG,
-	// then we could overflow the stack because golang does not support proper tail calls
+	// We'd probably want to convince ourselves that for a very deeply nested DAG, we wouldn't overflow the stack.
+	// golang doesn't have comprehensive tail call optimisation, but some cases it's ok with
 	shares, err := finder.GetSharesRecurse("Ethical Global Fund", holdings)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
+
+	// NOTE
+	// Have a look at the unit tests for another approach based on a memento pattern
+	// Try running the benchmarks with `go test -bench . -count 3`
 
 	// Print the result to stdout in json format
 	encoder := json.NewEncoder(os.Stdout)

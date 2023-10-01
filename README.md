@@ -22,6 +22,12 @@ The application can be run with: -
 
 ## Testing
 
-The solution contains unit tests that can be run with
+The solution contains unit tests that can be run with: -
 
     go test
+
+## Benchmarking
+
+The solution contains an extra finder algorithm that uses a memento pattern. This can be run through benchmarks with: -
+
+    go test -bench . -count 3
