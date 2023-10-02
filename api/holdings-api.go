@@ -9,7 +9,7 @@ import (
 // HoldingRecord represents a share or fund and the ratio of the parent fund that it makes up
 type HoldingRecord struct {
 	Name   string  `json:"name"`
-	Weight float32 `json:"weight"`
+	Weight float64 `json:"weight"`
 }
 
 // FundRecord represent a fund definition including a list of holdings

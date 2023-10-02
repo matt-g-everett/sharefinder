@@ -4,47 +4,62 @@ import (
 	"sharefinder/api"
 )
 
-// Holding represents a fund or a share holding, when the holding is first discovered, we don't know whether
-// its a fund or a share, so this is represented in the IsFund field and can be updated on the fly
+// Investment represents a fund or share in which we can invest
+//
+// When the holding is first discovered, we don't know whether its a fund or a share,
+// so this is represented in the IsFund field and can be updated on the fly
 //
 // NOTE
 // We could have chosen to lock down the fund/share definition by looking at the Name to see whether it has
-// "Fund" in it. However, this constrains the fund name more and requires text parsing which is more error prone
-type Holding struct {
+// "Fund" in it. However, this constrains the fund name and requires text parsing which is more error prone
+type Investment struct {
 	Name     string
-	Holdings []*Holding
 	IsFund   bool
+	Holdings map[string]*Holding
 }
 
-// ensureHolding returns an existing holding or creates a new one as required
-func ensureHolding(name string, isFund bool, holdings map[string]*Holding) *Holding {
-	holding, found := holdings[name]
+// Holding represents the holding of an investment (fund or a share) and it's weight
+//
+// NOTE
+// floats can struggle to represent values exactly, we'll assume for now that this is ok
+// and that rounding corrections would happen at the point the ratio was converted back into currency
+type Holding struct {
+	Investment *Investment
+	Weight     float64
+}
+
+// InvestmentDag represents a map of Investments that are connected together in a DAG (Directed Acyclid Graph)
+type InvestmentsDag map[string]*Investment
+
+// ensureInvestment returns an existing holding or creates a new one as required
+func ensureInvestment(name string, isFund bool, investments InvestmentsDag) *Investment {
+	investment, found := investments[name]
 	if !found {
-		holding = &Holding{Name: name, IsFund: isFund, Holdings: []*Holding{}}
-		holdings[name] = holding
+		investment = &Investment{Name: name, IsFund: isFund, Holdings: make(map[string]*Holding)}
+		investments[name] = investment
 	}
 
 	// Latch to being a fund
-	holding.IsFund = holding.IsFund || isFund
+	investment.IsFund = investment.IsFund || isFund
 
-	return holding
+	return investment
 }
 
-// NewHoldingsDag takes a flat list of fund records and converts them into a DAG (Directed Acyclic Graph)
-// of Holdings presented in a map with an entry for each Holding (fund or share) by name
-func NewHoldingsDag(fundData api.FundData) map[string]*Holding {
-	// Create a map of all the holdings by name
-	holdings := make(map[string]*Holding)
+// NewInvestmentsDag takes a flat list of fund records and converts them into a DAG (Directed Acyclic Graph)
+// of Investments and Holdings presented in a map with an entry for each Investment (fund or share) by name
+func NewInvestmentsDag(fundData api.FundData) InvestmentsDag {
+	// Create a map of all the investments by name
+	investments := make(InvestmentsDag)
 
 	// Find the appropriate attachments for each fundRecord
 	for _, fundRecord := range fundData {
-		fundHolding := ensureHolding(fundRecord.Name, true, holdings)
+		fund := ensureInvestment(fundRecord.Name, true, investments)
 		for _, holdingRecord := range fundRecord.Holdings {
-			holding := ensureHolding(holdingRecord.Name, false, holdings)
-			fundHolding.Holdings = append(fundHolding.Holdings, holding)
+			investment := ensureInvestment(holdingRecord.Name, false, investments)
+			fund.Holdings[investment.Name] = &Holding{Investment: investment, Weight: holdingRecord.Weight}
 		}
 	}
 
 	// Technically, we don't need share names in this map, but it's assumed that the value in removing them isn't high
-	return holdings
+	return investments
 }

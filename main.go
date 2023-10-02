@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Structure the data into a DAG (directed acyclic graph) so we can traverse the relationships
-	holdings := model.NewHoldingsDag(fundData)
+	investments := model.NewInvestmentsDag(fundData)
 
 	// Lets demonstrate basic recursion here
 	//
@@ -30,7 +30,7 @@ func main() {
 	// stack overflows in extreme cases. This is easy to show by introducing a loop in example.json
 	//
 	// We may decide to attempt some form of trampolining, e.g. https://github.com/kandu/go_tailcall
-	shares, err := finder.GetSharesRecurse("Ethical Global Fund", holdings)
+	shares, err := finder.GetSharesRecurse("Ethical Global Fund", investments)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
@@ -51,14 +51,8 @@ func main() {
 	// Follow-up work could be to assess the scale of real-world datasets and then
 	// decide whether an optimisation like the memento pattern should be pursued
 
-	// Convert the ShareSet to a slice, we already know the capacity so preallocate it
-	sharesForPrint := make([]string, 0, len(shares))
-	for k := range shares {
-		sharesForPrint = append(sharesForPrint, k)
-	}
-
 	// Print the result to stdout in json format
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "    ")
-	encoder.Encode(sharesForPrint)
+	encoder.Encode(shares)
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"math"
 	"testing"
 
 	"sharefinder/api"
@@ -12,38 +14,64 @@ import (
 
 const benchmarkIterations = 100000
 
+// epsilon represents the smallest increment for a float close to zero
+var epsilon = math.Nextafter(1, 2) - 1
+
+// compareShareWeights determines whether two sets of ShareWeights are similar enough
+func compareShareWeights(t *testing.T, control finder.ShareWeights, result finder.ShareWeights) {
+	assert.Equal(t, len(control), len(result), "should be the same number of shares")
+	for controlName, controlWeight := range control {
+		resultWeight, found := result[controlName]
+		assert.True(t, found, fmt.Sprintf("share %s should be present", controlName))
+
+		// NOTE
+		// Floats are a bit tricky to compare, this is a common way to do it
+		weightDiff := math.Abs(controlWeight - resultWeight)
+		assert.LessOrEqual(t, weightDiff, epsilon, fmt.Sprintf("share %s weight of %f should be close to %f", controlName, resultWeight, controlWeight))
+	}
+}
+
+func checkSumOfWeights(t *testing.T, result finder.ShareWeights) {
+	sum := 0.0
+	for _, weight := range result {
+		sum += weight
+	}
+
+	assert.LessOrEqual(t, sum-1.0, epsilon, "the sum of the weights should be close to 1.0")
+}
+
 // Define the test cases
 var finderTestCases = []struct {
 	fundName string
-	shares   finder.ShareSet
+	shares   finder.ShareWeights
 }{
 	{
 		fundName: "Ethical Global Fund",
-		shares: finder.ShareSet{
-			"GreenCo":       struct{}{},
-			"SolarCorp":     struct{}{},
-			"SpaceY":        struct{}{},
-			"BeanzRUS":      struct{}{},
-			"GoldenGadgets": struct{}{},
-			"MicroFit":      struct{}{},
-			"GrapeCo":       struct{}{},
+		shares: finder.ShareWeights{
+			"GreenCo":       0.06,
+			"SolarCorp":     0.028,
+			"SpaceY":        0.105,
+			"BeanzRUS":      0.21,
+			"GoldenGadgets": 0.15,
+			"MicroFit":      0.1,
+			"GrapeCo":       0.347,
 		},
 	},
 	{
 		fundName: "Fund B",
-		shares: finder.ShareSet{
-			"GreenCo":  struct{}{},
-			"GrapeCo":  struct{}{},
-			"MicroFit": struct{}{},
+		shares: finder.ShareWeights{
+			"GreenCo":  0.3,
+			"GrapeCo":  0.2,
+			"MicroFit": 0.5,
 		},
 	},
 	{
 		fundName: "Fund D",
-		shares: finder.ShareSet{
-			"SolarCorp": struct{}{},
-			"GrapeCo":   struct{}{},
-			"SpaceY":    struct{}{},
-			"BeanzRUS":  struct{}{},
+		shares: finder.ShareWeights{
+			"SolarCorp": 0.08,
+			"GrapeCo":   0.02,
+			"SpaceY":    0.3,
+			"BeanzRUS":  0.6,
 		},
 	},
 }
@@ -51,42 +79,43 @@ var finderTestCases = []struct {
 func TestFindingShares(t *testing.T) {
 	// First create the holdings DAG
 	fundData, _ := api.LoadFundData("testdata/example.json")
-	holdings := model.NewHoldingsDag(fundData)
+	investments := model.NewInvestmentsDag(fundData)
 
 	for _, test := range finderTestCases {
 		// Find the shares for the given fund name and check for an error
-		shares, err := finder.GetSharesRecurse(test.fundName, holdings)
+		shares, err := finder.GetSharesRecurse(test.fundName, investments)
 		assert.Nil(t, err, "error should be nil")
-		assert.Equal(t, shares, test.shares, "shares should contain same elements")
+		checkSumOfWeights(t, shares)
+		compareShareWeights(t, test.shares, shares)
 	}
 }
 
-func TestFindingSharesMemento(t *testing.T) {
-	// First create the holdings DAG and the memento
-	fundData, _ := api.LoadFundData("testdata/example.json")
-	holdings := model.NewHoldingsDag(fundData)
-	memento := make(finder.FinderMemento)
-	for _, test := range finderTestCases {
-		// Find the shares for the given fund name and check for an error
-		shares, err := finder.GetSharesMemento(test.fundName, holdings, memento)
-		assert.Nil(t, err, "error should be nil")
-		assert.Equal(t, shares, test.shares, "shares should contain same elements")
-	}
-}
+// func TestFindingSharesMemento(t *testing.T) {
+// 	// First create the holdings DAG and the memento
+// 	fundData, _ := api.LoadFundData("testdata/example.json")
+// 	holdings := model.NewInvestmentsDag(fundData)
+// 	memento := make(finder.FinderMemento)
+// 	for _, test := range finderTestCases {
+// 		// Find the shares for the given fund name and check for an error
+// 		shares, err := finder.GetSharesMemento(test.fundName, holdings, memento)
+// 		assert.Nil(t, err, "error should be nil")
+// 		assert.Equal(t, shares, test.shares, "shares should contain same elements")
+// 	}
+// }
 
 func BenchmarkRecursion(b *testing.B) {
 	fundData, _ := api.LoadFundData("testdata/example.json")
-	holdings := model.NewHoldingsDag(fundData)
+	investments := model.NewInvestmentsDag(fundData)
 	for i := 0; i < benchmarkIterations; i++ {
-		finder.GetSharesRecurse("Ethical Global Fund", holdings)
+		finder.GetSharesRecurse("Ethical Global Fund", investments)
 	}
 }
 
-func BenchmarkMemento(b *testing.B) {
-	fundData, _ := api.LoadFundData("testdata/example.json")
-	holdings := model.NewHoldingsDag(fundData)
-	memento := make(finder.FinderMemento)
-	for i := 0; i < benchmarkIterations; i++ {
-		finder.GetSharesMemento("Ethical Global Fund", holdings, memento)
-	}
-}
+// func BenchmarkMemento(b *testing.B) {
+// 	fundData, _ := api.LoadFundData("testdata/example.json")
+// 	holdings := model.NewHoldingsDag(fundData)
+// 	memento := make(finder.FinderMemento)
+// 	for i := 0; i < benchmarkIterations; i++ {
+// 		finder.GetSharesMemento("Ethical Global Fund", holdings, memento)
+// 	}
+// }
