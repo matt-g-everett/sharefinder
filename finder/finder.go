@@ -2,32 +2,38 @@ package finder
 
 import (
 	"fmt"
+	"maps"
 
 	"sharefinder/model"
 )
 
-type FinderMemento map[string][]string
+// ShareSet is a simple Set analog that contains share names
+type ShareSet map[string]struct{}
+
+// FinderMemento is used to store ShareSets that have previously been enumerated for a fund,
+// where the key is the fund name
+type FinderMemento map[string]ShareSet
 
 // findSharesRecurse finds all shares with a basic recursion function
-func findSharesRecurse(holding *model.Holding, shares *[]string) {
+func findSharesRecurse(holding *model.Holding, shares ShareSet) {
 	for _, h := range holding.Holdings {
 		if h.IsFund {
 			findSharesRecurse(h, shares)
 		} else {
-			*shares = append(*shares, h.Name)
+			shares[h.Name] = struct{}{}
 		}
 	}
 }
 
 // GetSharesRecurse demonstrates the basic recursion strategy
-func GetSharesRecurse(primaryHoldingName string, holdings map[string]*model.Holding) ([]string, error) {
+func GetSharesRecurse(primaryHoldingName string, holdings map[string]*model.Holding) (ShareSet, error) {
 	primaryHolding, found := holdings[primaryHoldingName]
 	if !found {
 		return nil, fmt.Errorf("holding %s was not found", primaryHoldingName)
 	}
 
-	shares := []string{}
-	findSharesRecurse(primaryHolding, &shares)
+	shares := make(ShareSet)
+	findSharesRecurse(primaryHolding, shares)
 	return shares, nil
 }
 
@@ -39,32 +45,32 @@ func GetSharesRecurse(primaryHoldingName string, holdings map[string]*model.Hold
 //
 // NOTE
 // It may even be practical to parallelise the sub problems, but let's not get too carried away at this stage :)
-func findSharesMemento(holding *model.Holding, shares *[]string, memento FinderMemento) {
+func findSharesMemento(holding *model.Holding, shares ShareSet, memento FinderMemento) {
 	for _, h := range holding.Holdings {
 		if h.IsFund {
 			// If this is a fund, then we may have already found all of it's shares
 			storedShares, ok := memento[h.Name]
 			if ok {
 				// The shares were already found, just append them
-				*shares = append(*shares, storedShares...)
+				maps.Copy(shares, storedShares)
 			} else {
 				// We haven't found the shares for this fund yet, so do it now and store it in the memento
-				sharesForHolding := []string{}
-				findSharesMemento(h, &sharesForHolding, memento)
+				sharesForHolding := make(ShareSet)
+				findSharesMemento(h, sharesForHolding, memento)
 				memento[h.Name] = sharesForHolding
 
 				// Now we can use the shares we just found for the current operation
-				*shares = append(*shares, sharesForHolding...)
+				maps.Copy(shares, sharesForHolding)
 			}
 		} else {
 			// This is a share, just add it
-			*shares = append(*shares, h.Name)
+			shares[h.Name] = struct{}{}
 		}
 	}
 }
 
 // GetSharesMemento demonstrates a dynamic programming approach to the problem
-func GetSharesMemento(primaryHoldingName string, holdings map[string]*model.Holding, memento FinderMemento) ([]string, error) {
+func GetSharesMemento(primaryHoldingName string, holdings map[string]*model.Holding, memento FinderMemento) (ShareSet, error) {
 	primaryHolding, found := holdings[primaryHoldingName]
 	if !found {
 		return nil, fmt.Errorf("holding %s was not found", primaryHoldingName)
@@ -73,7 +79,7 @@ func GetSharesMemento(primaryHoldingName string, holdings map[string]*model.Hold
 	// Wrap our primary holding in a root object; makes it easier to store the result in the memento
 	rootHolding := model.Holding{Name: "root", Holdings: []*model.Holding{primaryHolding}, IsFund: true}
 
-	shares := []string{}
-	findSharesMemento(&rootHolding, &shares, memento)
+	shares := make(ShareSet)
+	findSharesMemento(&rootHolding, shares, memento)
 	return shares, nil
 }

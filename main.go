@@ -36,11 +36,29 @@ func main() {
 	}
 
 	// NOTE
-	// Have a look at the unit tests for another approach based on a memento pattern
-	// Try running the benchmarks with `go test -bench . -count 3`
+	// Have a look at the unit tests for another approach based on a memento pattern,
+	// which is a common way to tackle dynamic programming like problems
+	//
+	// The benchmarks can be run with `go test -bench . -cpuprofile cpu.prof -count 5`
+	//
+	// With the tiny dataset we're using, it doesn't make much difference because the
+	// map copy operations counteract the gains at this data scale.
+	//
+	// However the profiler results from `go tool pprof -http=":3000" cpu.prof`
+	// demonstrate that less time is spent recursing through the data set and we
+	// would expect this to scale better as the data set size increases
+	//
+	// Follow-up work could be to assess the scale of real-world datasets and then
+	// decide whether an optimisation like the memento pattern should be pursued
+
+	// Convert the ShareSet to a slice, we already know the capacity so preallocate it
+	sharesForPrint := make([]string, 0, len(shares))
+	for k, _ := range shares {
+		sharesForPrint = append(sharesForPrint, k)
+	}
 
 	// Print the result to stdout in json format
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "    ")
-	encoder.Encode(shares)
+	encoder.Encode(sharesForPrint)
 }

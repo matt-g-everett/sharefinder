@@ -34,7 +34,7 @@ func ensureHolding(name string, isFund bool, holdings map[string]*Holding) *Hold
 // of Holdings presented in a map with an entry for each Holding (fund or share) by name
 func NewHoldingsDag(fundData api.FundData) map[string]*Holding {
 	// Create a map of all the holdings by name
-	holdings := map[string]*Holding{}
+	holdings := make(map[string]*Holding)
 
 	// Find the appropriate attachments for each fundRecord
 	for _, fundRecord := range fundData {

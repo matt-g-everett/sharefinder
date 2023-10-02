@@ -23,7 +23,7 @@ type FundData []FundRecord
 
 // NewFundData creates a FundData object from a slice of bytes, which could be read from a file
 func NewFundData(bytes []byte) FundData {
-	fundData := FundData{}
+	fundData := make(FundData, 0)
 	json.Unmarshal(bytes, &fundData)
 
 	return fundData
