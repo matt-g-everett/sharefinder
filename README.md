@@ -8,6 +8,10 @@ in a JSON array to stdout.
 Some of the more important comments in the code that describe assumptions, decisions and future possibilities
 have a `NOTE` marker on them.
 
+## The Answer
+
+Yes, we are exposed to GoldenGadgets at 15% of our investment.
+
 ## Structure
 
 The structure of the application packages: -
