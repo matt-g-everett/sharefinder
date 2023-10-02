@@ -53,7 +53,7 @@ func main() {
 
 	// Convert the ShareSet to a slice, we already know the capacity so preallocate it
 	sharesForPrint := make([]string, 0, len(shares))
-	for k, _ := range shares {
+	for k := range shares {
 		sharesForPrint = append(sharesForPrint, k)
 	}
 
