@@ -31,7 +31,7 @@ The solution contains unit tests that can be run with: -
 
 ## Benchmarking and profiling
 
-The solution contains an extra finder algorithm that uses a memento pattern. This can be run through benchmarks with: -
+The solution contains an extra finder algorithm that uses a memoization pattern. This can be run through benchmarks with: -
 
     go test -bench . -cpuprofile cpu.prof -count 5
 

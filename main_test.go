@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const benchmarkIterations = 100000
+const benchmarkIterations = 10000
 
 // epsilon represents the smallest increment for a float close to zero
 var epsilon = math.Nextafter(1, 2) - 1
@@ -90,18 +90,19 @@ func TestFindingShares(t *testing.T) {
 	}
 }
 
-// func TestFindingSharesMemento(t *testing.T) {
-// 	// First create the holdings DAG and the memento
-// 	fundData, _ := api.LoadFundData("testdata/example.json")
-// 	holdings := model.NewInvestmentsDag(fundData)
-// 	memento := make(finder.FinderMemento)
-// 	for _, test := range finderTestCases {
-// 		// Find the shares for the given fund name and check for an error
-// 		shares, err := finder.GetSharesMemento(test.fundName, holdings, memento)
-// 		assert.Nil(t, err, "error should be nil")
-// 		assert.Equal(t, shares, test.shares, "shares should contain same elements")
-// 	}
-// }
+func TestFindingSharesMemoized(t *testing.T) {
+	// First create the holdings DAG and the memoir
+	fundData, _ := api.LoadFundData("testdata/example.json")
+	holdings := model.NewInvestmentsDag(fundData)
+	memoir := make(finder.FinderMemoir)
+	for _, test := range finderTestCases {
+		// Find the shares for the given fund name and check for an error
+		shares, err := finder.GetSharesMemoized(test.fundName, holdings, memoir)
+		assert.Nil(t, err, "error should be nil")
+		checkSumOfWeights(t, shares)
+		compareShareWeights(t, test.shares, shares)
+	}
+}
 
 func BenchmarkRecursion(b *testing.B) {
 	fundData, _ := api.LoadFundData("testdata/example.json")
@@ -111,11 +112,11 @@ func BenchmarkRecursion(b *testing.B) {
 	}
 }
 
-// func BenchmarkMemento(b *testing.B) {
-// 	fundData, _ := api.LoadFundData("testdata/example.json")
-// 	holdings := model.NewHoldingsDag(fundData)
-// 	memento := make(finder.FinderMemento)
-// 	for i := 0; i < benchmarkIterations; i++ {
-// 		finder.GetSharesMemento("Ethical Global Fund", holdings, memento)
-// 	}
-// }
+func BenchmarkMemoized(b *testing.B) {
+	fundData, _ := api.LoadFundData("testdata/example.json")
+	holdings := model.NewInvestmentsDag(fundData)
+	memoir := make(finder.FinderMemoir)
+	for i := 0; i < benchmarkIterations; i++ {
+		finder.GetSharesMemoized("Ethical Global Fund", holdings, memoir)
+	}
+}
