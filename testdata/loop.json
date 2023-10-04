@@ -1,0 +1,91 @@
+[
+    {
+        "name": "Ethical Global Fund",
+        "holdings": [
+            {
+                "name": "Fund B",
+                "weight": 0.2
+            },
+            {
+                "name": "Fund C",
+                "weight": 0.5
+            },
+            {
+                "name": "Fund D",
+                "weight": 0.15
+            },
+            {
+                "name": "GrapeCo",
+                "weight": 0.15
+            }
+        ]
+    },
+    {
+        "name": "Fund B",
+        "holdings": [
+            {
+                "name": "MicroFit",
+                "weight": 0.5
+            },
+            {
+                "name": "GreenCo",
+                "weight": 0.3
+            },
+            {
+                "name": "GrapeCo",
+                "weight": 0.2
+            }
+        ]
+    },
+    {
+        "name": "Fund C",
+        "holdings": [
+            {
+                "name": "Fund D",
+                "weight": 0.4
+            },
+            {
+                "name": "GrapeCo",
+                "weight": 0.3
+            },
+            {
+                "name": "GoldenGadgets",
+                "weight": 0.3
+            }
+        ]
+    },
+    {
+        "name": "Fund D",
+        "holdings": [
+            {
+                "name": "Fund E",
+                "weight": 0.1
+            },
+            {
+                "name": "SpaceY",
+                "weight": 0.3
+            },
+            {
+                "name": "BeanzRUS",
+                "weight": 0.6
+            }
+        ]
+    },
+    {
+        "name": "Fund E",
+        "holdings": [
+            {
+                "name": "Fund C",
+                "weight": 0.1
+            },
+            {
+                "name": "GrapeCo",
+                "weight": 0.2
+            },
+            {
+                "name": "SolarCorp",
+                "weight": 0.8
+            }
+        ]
+    }
+]

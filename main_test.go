@@ -104,6 +104,45 @@ func TestFindingSharesMemoized(t *testing.T) {
 	}
 }
 
+func TestFindingSharesTrampoline(t *testing.T) {
+	// First create the holdings DAG and the memoir
+	fundData, _ := api.LoadFundData("testdata/example.json")
+	holdings := model.NewInvestmentsDag(fundData)
+	for _, test := range finderTestCases {
+		// Find the shares for the given fund name and check for an error
+		shares, err := finder.GetSharesTrampoline(test.fundName, holdings)
+		assert.Nil(t, err, "error should be nil")
+		checkSumOfWeights(t, shares)
+		compareShareWeights(t, test.shares, shares)
+	}
+}
+
+// func TestLoopTrampoline(t *testing.T) {
+// 	completed := make(chan bool)
+// 	go func(comp chan<- bool) {
+// 		fundData, _ := api.LoadFundData("testdata/loop.json")
+// 		holdings := model.NewInvestmentsDag(fundData)
+// 		finder.GetSharesTrampoline("Ethical Global Fund", holdings)
+// 		comp <- true
+// 	}(completed)
+
+// 	// We want to see if the trampoline function can run for a few seconds without a stack overflow
+// 	timeout := time.NewTimer(time.Duration(5) * time.Second)
+// 	select {
+// 	case <-timeout.C:
+// 		// We should timeout as the trampoline function will never complete
+// 	case <-completed:
+// 		assert.Fail(t, "the looped example should never finish")
+// 	}
+// }
+
+// TestLoopRecurse is intended to demonstrate how the recursive function can overflow the stack
+// func TestLoopRecurse(t *testing.T) {
+// 	fundData, _ := api.LoadFundData("testdata/loop.json")
+// 	holdings := model.NewInvestmentsDag(fundData)
+// 	finder.GetSharesRecurse("Ethical Global Fund", holdings)
+// }
+
 func BenchmarkRecursion(b *testing.B) {
 	fundData, _ := api.LoadFundData("testdata/example.json")
 	investments := model.NewInvestmentsDag(fundData)
@@ -118,5 +157,13 @@ func BenchmarkMemoized(b *testing.B) {
 	memoir := make(finder.FinderMemoir)
 	for i := 0; i < benchmarkIterations; i++ {
 		finder.GetSharesMemoized("Ethical Global Fund", holdings, memoir)
+	}
+}
+
+func BenchmarkTrampoline(b *testing.B) {
+	fundData, _ := api.LoadFundData("testdata/example.json")
+	holdings := model.NewInvestmentsDag(fundData)
+	for i := 0; i < benchmarkIterations; i++ {
+		finder.GetSharesTrampoline("Ethical Global Fund", holdings)
 	}
 }
